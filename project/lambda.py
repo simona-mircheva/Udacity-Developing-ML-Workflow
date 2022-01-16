@@ -37,25 +37,26 @@ def lambda_handler(event, context):
 
 # Fill this in with the name of your deployed model
 
-ENDPOINT = 'image-classification-2022-01-15-14-55-24-328'
+
+ENDPOINT = 'image-classification-2022-01-16-09-42-30-812'
+runtime = boto3.client('runtime.sagemaker')
 
 
 def lambda_handler(event, context):
 
     # Decode the image data
-    image = base64.b64decode(event["image_data"])
+    image = base64.b64decode(event['body']['image_data'])
 
     # Instantiate a Predictor
-    predictor = sagemaker.predictor.Predictor(
-        endpoint,
-        sagemaker_session=sagemaker.Session(),
-    )
+    predictor = runtime.invoke_endpoint(EndpointName=ENDPOINT,
+                                        ContentType='image/png',
+                                        Body=image)
 
     # For this model the IdentitySerializer needs to be "image/png"
-    predictor.serializer = IdentitySerializer("image/png")
+    # predictor.serializer=IdentitySerializer("image/png")
 
     # Make a prediction:
-    inferences = predictor.predict(image)
+    inferences = predictor['Body'].read()
 
     # We return the data back to the Step Function
     event["inferences"] = inferences.decode('utf-8')
@@ -64,20 +65,21 @@ def lambda_handler(event, context):
         'body': json.dumps(event)
     }
 
-
 # low-confidence inferences
 
 
-THRESHOLD = .93
+THRESHOLD = .98
 
 
 def lambda_handler(event, context):
 
-    # Grab the inferences from the event
-    inferences = event["inferences"]
+    # Get the inferences from the event
+
+    body = json.loads(event['body'])
+    inferences = json.loads(body['inferences'])
 
     # Check if any values in our inferences are above THRESHOLD
-    meets_threshold = (max(inferences) > THRESHOLD)
+    meets_threshold = any(x > THRESHOLD for x in inferences)
 
     # If our threshold is met, pass our data back out of the
     # Step Function, else, end the Step Function with an error
