@@ -3,7 +3,7 @@
 import json
 
 
-THRESHOLD = .98
+THRESHOLD = .94
 
 
 def lambda_handler(event, context):
@@ -21,7 +21,7 @@ def lambda_handler(event, context):
     if meets_threshold:
         pass
     else:
-        raise("THRESHOLD_CONFIDENCE_NOT_MET")
+        raise ValueError("THRESHOLD_CONFIDENCE_NOT_MET")
 
     return {
         'statusCode': 200,

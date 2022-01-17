@@ -8,7 +8,7 @@ import json
 import base64
 import boto3
 
-ENDPOINT = 'image-classification-2022-01-16-09-42-30-812'
+ENDPOINT = 'image-classification-2022-01-17-19-48-56-008'
 runtime = boto3.client('runtime.sagemaker')
 
 
